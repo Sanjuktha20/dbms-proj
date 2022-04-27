@@ -2,12 +2,12 @@ import React, { useState } from "react";
 import Box from "@mui/material/Box";
 import Axios from "axios";
 import "./login.css";
-import img from "../../bg.jpeg"
+import img from "../pics/logo11.png"
 import { Paper } from "@mui/material";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-
+ 
 export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -28,9 +28,12 @@ export default function Login() {
   return (
     <div className="page-wrapper">
     <div className="title-wrapper">
-    <Typography component="h1" variant="h5" >
+    <img src={img} alt="img" width="200px" className="headingImg"/>
+    <Typography component="h1" variant="h2" >
             Pharmacy Management
-          </Typography></div>
+          </Typography>
+          
+          </div>
     <div className="wrappertwo">
       
       <div className="login-wrapper">
@@ -43,11 +46,15 @@ export default function Login() {
           }}
         >
           <Typography component="h1" variant="h5">
-            Sign in
+            SIGN IN
           </Typography>
           <Box component="form" onSubmit={login} noValidate sx={{ mt: 1 }}>
             <TextField
               margin="normal"
+              variant="filled"
+              sx={{
+                backgroundColor:"white"
+              }}
               required
               fullWidth
               id="username"
@@ -60,6 +67,10 @@ export default function Login() {
             />
             <TextField
               margin="normal"
+              variant="filled"
+              sx={{
+                backgroundColor:"white"
+              }}
               required
               fullWidth
               name="password"
@@ -76,6 +87,7 @@ export default function Login() {
               fullWidth
               variant="contained"
               sx={{ mt: 3, mb: 2 }}
+              href="/StartSell"
             >
               Sign In
             </Button>
@@ -83,8 +95,9 @@ export default function Login() {
         </Box>
         
       </div>
-      <img src={img} alt="img" />
+      
     </div>
     </div>
+    
   );
 }

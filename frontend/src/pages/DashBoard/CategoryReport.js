@@ -19,26 +19,53 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Axios from "axios";
-
+import { Autocomplete } from "@mui/material";
+import { TextField } from "@mui/material";
+ 
 const drawerWidth = 200;
-
+ 
 export default function CategoryReport() {
   const classes = useStyles();
-
-  const [categories, setCategories] = useState([]);
-
+ 
+  const [categories, setCategories] = useState(["abc"]);
+  const [category, setCategory] = useState(" ");
+  const [categoryName, setCategoryName] = useState(" ");
+ 
+  const [NoOutput, setNoOutput]=useState(false);
+ 
     useEffect(() => {
         getCategories();
     }, []);
-
     const getCategories = () => {
+      Axios.get("http://localhost:5000/getCategory")
+      .then((response) => {
+        console.log(response.data);
+        setCategories(response.data);
+        //setNoOutput(false);
+      })
+  };
+ 
+  
+ 
+    const handleSearch=()=>{
+      console.log(categoryName);
+      if(categoryName===""){
         Axios.get("http://localhost:5000/getCategory")
-        .then((response) => {
-          console.log(response.data);
-          setCategories(response.data);
-        })
-    };
-
+      .then((response) => {
+        console.log(response.data);
+        setCategories(response.data);
+        //setNoOutput(false);
+      })
+      }
+      else {
+        Axios.get(`http://localhost:5000/getCategoryByName/${categoryName}`).then(
+        (resp) => {
+        console.log(resp.data)
+        //if(resp.data===[]) setNoOutput(true);
+        setCategories(resp.data);
+      });
+    }
+    }
     function deleteCategory(Name){
       Axios.delete("http://localhost:5000/deleteCategory/"+Name)
       .then((response)=>{
@@ -46,7 +73,7 @@ export default function CategoryReport() {
         window.location.reload(false);
       })
     };
-
+ 
   return (
     <Paper
       elevation={16}
@@ -56,6 +83,22 @@ export default function CategoryReport() {
         margin: 2,
       }}
     >
+      <div style={{display:"flex",alignItems:"center"}} >
+<TextField
+className={classes.formcomps}
+id="compName"
+value={categoryName}
+label="Category"
+variant="outlined"
+margin="dense"
+sx={{margin:"10px"}}
+onChange={(e) => {
+    setCategoryName(e.target.value);
+}}
+/>
+<Button onClick={handleSearch}>
+Search
+</Button></div>
       <Typography
         variant="h5"
         marginLeft={1}
@@ -99,6 +142,7 @@ export default function CategoryReport() {
           </TableBody>
         </Table>
       </TableContainer>
+      {/* {NoOutput && <Typography align="center" sx={{color:"red", display:`${NoOutput}`}} variant="h6">No Such Category Exists, try a different Category Name</Typography>} */}
     </Paper>
   );
 }

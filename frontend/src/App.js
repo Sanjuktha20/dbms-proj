@@ -17,6 +17,8 @@ import StockReport from "./pages/DashBoard/StockReport";
 import UpdateMedicine from "./pages/DashBoard/UpdateMedicine";
 import UpdateCompany from "./pages/DashBoard/UpdateCompany";
 import UpdateCategory from "./pages/DashBoard/UpdateCategory";
+import ShowOrder from "./pages/DashBoard/ShowOrder";
+import UpdateStock from "./pages/DashBoard/UpdateStock";
 function App() {
   return (
     <div className="wrapper">
@@ -54,6 +56,11 @@ function App() {
           <Route exact path={"/OrderReport"}>
             <Dashboard>
               <OrderReports />
+            </Dashboard>
+          </Route>
+          <Route exact path={"/UpdateStock/:id"}>
+            <Dashboard>
+              <UpdateStock />
             </Dashboard>
           </Route>
           <Route exact path={"/MedicineReport"}>
@@ -94,6 +101,11 @@ function App() {
           <Route exact path={"/StockReport"}>
             <Dashboard>
               <StockReport />
+            </Dashboard>
+          </Route>
+          <Route exact path={"/getdetorderById/:id"}>
+            <Dashboard>
+              <ShowOrder />
             </Dashboard>
           </Route>
           <Route exact path={"/Logout"}>

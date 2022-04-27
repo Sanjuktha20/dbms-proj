@@ -29,7 +29,23 @@ function CompanyReport(props: MyComponent) {
   const classes = useStyles();
 
   const [companies, setCompanies] = useState([]);
-  const [companySuggestions, setCompSuggest] = useState([]);
+  const [company, setCompany] = useState("");
+  const [companiesuggestions, setCompaniesugg] = useState([]);
+  function handleCompanyChange(event, value) {
+    console.log(value);
+    if(!value){
+      getCompanies();
+    }
+    else{
+      setCompany(value);
+      console.log(company);
+      Axios.get(`http://localhost:5000/getCompanyByName/${company.companyName}`)
+      .then((response) => {
+        console.log(response.data);
+        setCompanies(response.data);
+      })
+    }
+  }
 
     useEffect(() => {
         getCompanies()
@@ -70,31 +86,16 @@ function CompanyReport(props: MyComponent) {
         Company Report
       </Typography>
 
-      {/* <SearchBar
-      onChange={() => console.log('onChange')}
-      onRequestSearch={() => console.log('onRequestSearch')}
-      style={{
-        margin: '0 auto',
-        maxWidth: 800
-      }}
-      /> */}
-
-        {/* <Autocomplete
-        freeSolo
-        id="free-solo-2-demo"
-        disableClearable
-        options={companySuggestions.map((option) => option.companyName)}
-        renderInput={(params) => (
-          <TextField
-            {...params}
-            label="Search input"
-            InputProps={{
-              ...params.InputProps,
-              type: 'search',
-            }}
-          />
-        )}
-      /> */}
+      <Autocomplete
+        fullWidth
+        value={company}
+        id="combo-box-demo"
+        options={companies}
+        getOptionLabel={(company) => company.companyName || "" }
+        sx={{ width: 300 }}
+        renderInput={(params) => <TextField {...params} label="Select Company" />}
+        onChange={handleCompanyChange}
+      />
 
       <TableContainer>
         <Table sx={{ minWidth: 650 }} aria-label="simple table">

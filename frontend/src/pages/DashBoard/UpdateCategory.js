@@ -35,7 +35,7 @@ function UpdateCategory(props: UpdateProps) {
   };
 
   useEffect(() => {
-    Axios.get(`http://localhost:5000/getCategory/${categoryName}`).then(
+    Axios.get(`http://localhost:5000/getCategoryByName/${categoryName}`).then(
       (resp) => {
         console.log(resp.data)
         const body = resp.data[0];

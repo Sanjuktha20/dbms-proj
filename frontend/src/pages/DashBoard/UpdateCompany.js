@@ -35,7 +35,7 @@ function UpdateCompany(props: UpdateProps) {
   };
 
   useEffect(() => {
-    Axios.get(`http://localhost:5000/getCompany/${companyName}`).then(
+    Axios.get(`http://localhost:5000/getCompanyByName/${companyName}`).then(
       (resp) => {
         console.log(resp.data)
         const body = resp.data[0];

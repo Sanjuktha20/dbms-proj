@@ -12,6 +12,7 @@ import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import FormControl from "@mui/material/FormControl";
 import Select from "@mui/material/Select";
+import { Autocomplete } from "@mui/material";
  
 export default function AddMedicine() {
   const classes = useStyles();
@@ -19,18 +20,27 @@ export default function AddMedicine() {
   const [title, setTitle] = useState("");
   const [company, setCompany] = useState("");
   const [category, setCategory] = useState("");
-  const [companies,setCompanies]=useState([]);
-  const[categories,setCategories]=useState(["e"]);
+  const [companies, setCompanies] = useState([]);
+  const [categories, setCategories] = useState([]);
+  //categories.map((x) => console.log(x.categoryName));
+  const [categoryNames, setCategoryNames] = useState([]);
+  function handleCategoryChange(event, value) {
+    setCategory(value);
+  }
+  function handleCompanyChange(event, value) {
+    setCompany(value);
+  }
   categories.map((x)=>console.log(x.categoryName));
   const addmedicine = (e) => {
     e.preventDefault();
     if(title=="" || desc=="") alert("All the fields have to be filled") 
     else{ 
+      console.log(company.companyName);
     Axios.post("http://localhost:5000/addMedicine", {
       medicineName:title, 
-     medicineDescription:desc,
-     companyName:company,
-      categoryName:category}).then((response) => {
+      medicineDescription:desc,
+      companyName:company.companyName,
+      categoryName:category.categoryName}).then((response) => {
       console.log(response.data);
     }).catch((err)=>console.log(err));}
   };
@@ -74,46 +84,29 @@ export default function AddMedicine() {
       >
         Add a Medicine
       </Typography>
- 
+
+      <Autocomplete
+        fullWidth
+        value={category}
+        id="combo-box-demo"
+        options={categories}
+        getOptionLabel={(category) => category.categoryName || "" }
+        sx={{ width: 300 }}
+        renderInput={(params) => <TextField {...params} label="Select Category" />}
+        onChange={handleCategoryChange}
+      />
       <FormControl sx={{ m: 0, minWidth: "100%" }}>
-        <InputLabel id="label">Select Category</InputLabel>
-        <Select
-          labelId="category"
-          id="category"
-          value={category}
-          fullWidth
-          onChange={(e) => {
-            setCategory(e.target.value);
-          }}
-        >
-          
-          {categories.map((x)=>{
-            return( 
-            <MenuItem value={`${x.categoryName}`}>{ `${x.categoryName}`}</MenuItem>)
-          })}
-          
-          
-        </Select>
-      </FormControl>
- 
-      <FormControl sx={{ m: 0, minWidth: "100%" }}>
-        <InputLabel id="label">Select Company</InputLabel>
-        <Select
-          labelId="label"
-          id="company"
-          value={company}
-          fullWidth
-          label="Select Company"
-          onChange={(e) => {
-            setCompany(e.target.value);
-          }}
-        >
-          {companies.map((x)=>{
-            return( 
-            <MenuItem value={`${x.companyName}`}>{ `${x.companyName}`}</MenuItem>)
-          })}
-        </Select>
-      </FormControl>
+        
+      <Autocomplete
+        fullWidth
+        value={company}
+        id="combo-box-demo"
+        options={companies}
+        getOptionLabel={(company) => company.companyName || "" }
+        sx={{ width: 300 }}
+        renderInput={(params) => <TextField {...params} label="Select Company" />}
+        onChange={handleCompanyChange}
+      /></FormControl>
  
       <TextField
         id="title"

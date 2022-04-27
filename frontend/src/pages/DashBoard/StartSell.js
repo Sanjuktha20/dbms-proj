@@ -28,53 +28,106 @@ const drawerWidth = 200;
 export default function StartSell() {
   const classes = useStyles();
   const[isValid,setisValid]=useState(true)
+  const [custID, setCustID] = useState("");
   const [custName, setCustName] = useState("");
   const [custNumber, setCustNumber] = useState("");
-  const[itemName,setItemName]=useState("");
-  const [qnty,setQnty]=useState("");
-  const [CartItems,setCart]=useState([{
-      ProductID:1,
-      ProductName:"abcd",
-      Qnty:3,
-      CostPerItem:4,
-      TotalCost:12
-  }]);
- 
-    const  ProductName="abcdee"
-    const OrderID=10
-     
+  const [customers, setCustomers] = useState([]);
+  const [medicineName,setMedicineName]=useState("");
+  const [stocks, setStocks] = useState([]);
+  const [qnty, setQnty] = useState("");
+  const [quantities,setQuantities]=useState([]);
+  const [totCost, setTotCost] = useState(0);
+  const [CartItems,setCart]=useState([]);
+  const [orderID, setOrderID] = useState(0);
+  const [disc, setDisc] = useState(1);
      const CostPerItem=4
-     
-  
-  const addToCart=(e)=>{
-      e.preventDefault();
-      setCart([...CartItems,{
-          ProductID:2,
-          ProductName,
-          Qnty:qnty,
-          CostPerItem,
-          TotalCost:CostPerItem*qnty
-      }])
-  }
   useEffect(()=>console.log("hello"),[isValid])
   const continueButton=()=>{
     if (custName=="" || custNumber=="") alert("Customer Name and Phone Number cannot be empty");
     else if(custNumber.length!=10) alert("Invalid Phone Number")
     else setisValid(true)
   }
-  const deleteFromCart=(e)=>{
-      e.preventDefault();
-      setCart(CartItems.filter((item)=>item.ProductID!=e.target.id))
-  }
 
   const reset = (e) => {
     e.preventDefault();
     setCustNumber("");
     setCustName("");
-    setItemName("");
-    setQnty("");
+    setCustID("");
+    //setQnty("");
     isValid=false;
   };
+
+  const Search = (e) => {
+    e.preventDefault();
+    if (custName=="" && custNumber=="") alert("Customer Name and Phone Number cannot be empty");
+    else if(custNumber===""){
+      Axios.get(`http://localhost:5000/getCustomerByName/${custName}`)
+      .then((response => {
+        console.log(response.data);
+        setCustomers(response.data);
+      }))
+    }
+    else{
+        Axios.get(`http://localhost:5000/getCustomerByNumber/${custNumber}`)
+      .then((response => {
+        console.log(response.data);
+        setCustomers(response.data);
+      }))
+      }
+  }
+
+  const SearchStock = (e) => {
+    e.preventDefault();
+    Axios.get(`http://localhost:5000/getStockByName/${medicineName}`)
+    .then((response) => {
+      console.log(response.data);
+      setStocks(response.data);
+    })
+  }
+
+  const placeOrder = (e) => {
+    e.preventDefault();
+    let date = new Date().toISOString().slice(0, 10);
+    console.log(date);
+    Axios.post(`http://localhost:5000/insertOrder`, {
+      orderDate:date,
+      customerID:custID,
+      totalCost:totCost
+    }).then((response) => {
+      console.log(response.data.insertId);
+      setOrderID(response.data.insertId);
+      console.log(orderID);
+      editStock();
+    })
+  }
+
+  const editStock = () => {
+    CartItems.map((item) => {
+      Axios.put(`http://localhost:5000/editStockWithQuantity/${item.StockID}`, {
+        quantity:item.StockQuantity
+      }).then((response) => {
+        console.log(response.data);
+      })
+      Axios.post(`http://localhost:5000/insertdetorder`, {
+        orderID:orderID,
+        stockID:item.StockID,
+        quantity:item.Qnty
+      })
+    })
+    getupdatevisits();
+  }
+
+  const getupdatevisits = () => {
+    Axios.put(`http://localhost:5000/editVisits/${custID}`).then((response) => {
+      console.log(response.data);
+    })
+  }
+
+  const deleteFromCart=(e)=>{
+    e.preventDefault();
+    console.log(e.target.id);
+    setCart(CartItems.filter((item)=>item.CartItemID!=e.target.id))
+}
 
   return (
     
@@ -112,17 +165,52 @@ export default function StartSell() {
             label="Phone Number"
             className={classes.formcomps}
             sx={{margin:"10px",width:"350px"}}
-            
-            
             margin="dense"
             onChange={(e) => {
               setCustNumber(e.target.value);
             }}
           /></div>
 
-        
+  <TableContainer>
+      <Table sx={{ minWidth: 650 }} aria-label="simple table">
+          <TableHead>
+            <TableRow>
+            <TableCell>Customer ID</TableCell>
+            <TableCell align="right">Customer Name</TableCell>
+            <TableCell align="right">Phone Number</TableCell>
+            <TableCell align="right">Number of visits</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {customers.map((row) => (
+            <TableRow
+              key={row.customerID}
+              sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+            >
+              <TableCell component="th" scope="row">
+                {row.customerID} 
+              </TableCell>
+              <TableCell align="right">{row.customerName}</TableCell>
+              <TableCell align="right">{row.customerPhoneNumber}</TableCell>
+              <TableCell align="right">{row.numberOfVisits}</TableCell>
+              <TableCell align="right"><Button id={row.customerID} onClick={() => {
+                setCustID(row.customerID);
+                setCustName(row.customerName);
+                setCustNumber(row.customerPhoneNumber);
+                if(row.numberOfVisits!=0 && row.numberOfVisits%10==0){
+                  setDisc(0.95);
+                }
+              }}>Select</Button></TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+      </TableContainer>
 
           <Stack className={classes.buttonstack} direction="row" spacing={2}>
+            <Button variant="contained" onClick={Search}>
+              Search
+            </Button>
             <Button variant="contained" onClick={continueButton}>
               Continue
             </Button>
@@ -131,6 +219,11 @@ export default function StartSell() {
             </Button>
           </Stack>
 
+          {custID && <Typography variant="h7" marginLeft={1} marginTop = {2} marginBottom={2} textAlign="initial">
+            CustomerID: {custID}, 
+            Name: {custName}, 
+            Phone Number: {custNumber}
+          </Typography>}
 
         </Paper>
         <div style={{display:`${isValid?"compact":"none"}`}}>
@@ -143,61 +236,136 @@ export default function StartSell() {
           }}
         >
             <Typography variant="h5" marginLeft={1} marginTop = {2} marginBottom={2} textAlign="initial">
-            Product Details
+            Medicine Details
           </Typography>
 
-        <div style={{display:"flex",flexDirection:"row"}}>
+        <div >
 
         <TextField
         className={classes.formcomps}
         id="compName"
-        value={itemName}
-        label="Product Name"
+        value={medicineName}
+        label="Medicine Name"
         variant="outlined"
         margin="dense"
         sx={{margin:"10px"}}
         onChange={(e) => {
-            setItemName(e.target.value);
+            setMedicineName(e.target.value);
         }}
         />
+        
+        <TableContainer>
+        <Table sx={{ minWidth: 650 }} aria-label="simple table">
+          <TableHead>
+            <TableRow>
+              <TableCell align="center">Stock ID</TableCell>
+              <TableCell align="center">Medicine Name</TableCell>
+              <TableCell align="center">Manufacture Date</TableCell>
+              <TableCell align="center">Expiry Date</TableCell>
+              <TableCell align="center">Quantity</TableCell>
+              <TableCell align="center">Cost per item</TableCell>
+              <TableCell align="center">Action</TableCell>
+            </TableRow>
+            {stocks.map((report) => (
+              <TableRow
+                key={report.stockID}
+                sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+              >
+                <TableCell align="center">{report.stockID}</TableCell>
+                <TableCell align="center">{report.medicineName}</TableCell>
+                <TableCell align="center">{report.manufactureDate.slice(0, 10)}</TableCell>
+                <TableCell align="center">{report.expiryDate.slice(0, 10)}</TableCell>
+                <TableCell align="center">{report.quantity}</TableCell>
+                <TableCell align="center">{report.costPerItem}</TableCell>
+                <TableCell align="center">
+                <TextField
+                  id={`compDesc${report.stockID}`}
+                  label="Quantity"
+                  className={classes.formcomps}
+                  sx={{margin:"5px"}}
+                  margin="dense"
+                  onChange={(e) => {
+                      setQnty(e.target.value);
 
-        <TextField
-        id="compDesc"
-        value={qnty}
-        label="Quantity"
-        className={classes.formcomps}
-        sx={{margin:"10px"}}
-        margin="dense"
-        onChange={(e) => {
-            setQnty(e.target.value);
-        }}
-        /></div>
+                  }}
+                  />
+                  <Button variant="contained" onClick={(e) => {
+                    e.preventDefault();
+                    if(!qnty){
+                      alert("Enter a valid quantity!");
+                    }
+                    else{
+                      console.log(report.stockID, report.medicineName, qnty, report.costPerItem)
+                      if(disc==0.95)  {
+                        setTotCost(totCost+report.costPerItem*qnty*0.95);
+                        setCart([...CartItems,{
+                          CartItemID:Math.floor((Math.random() * 10000) + 1),
+                            StockID:report.stockID,
+                            MedicineID:report.medicineID,
+                            MedicineName:report.medicineName,
+                            Qnty:qnty,
+                            StockQuantity:report.quantity-qnty,
+                            CostPerItem: report.costPerItem,
+                            TotalCost:report.costPerItem*qnty*0.95,
+                            customerID:custID
+                        }])
+                      }
+                      else {setTotCost(totCost+report.costPerItem*qnty);
+                        setCart([...CartItems,{
+                          CartItemID:Math.floor((Math.random() * 10000) + 1),
+                            StockID:report.stockID,
+                            MedicineID:report.medicineID,
+                            MedicineName:report.medicineName,
+                            Qnty:qnty,
+                            StockQuantity:report.quantity-qnty,
+                            CostPerItem: report.costPerItem,
+                            TotalCost:report.costPerItem*qnty,
+                            customerID:custID
+                        }])
+                    }
+                      setQnty(0);
+                    }
+                  }}>
+                    Add to cart
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableHead>
+          <TableBody>
+            
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+        
+        </div>
 
           <Stack className={classes.buttonstack} direction="row" spacing={2}>
-            <Button variant="contained" onClick={addToCart}>
-              Add to cart
-            </Button>
+          <Button variant="contained" onClick={SearchStock}>
+            Search
+          </Button>
             <Button variant="contained" onClick={reset}>
               Reset
             </Button>
           </Stack>
 
         </Paper>
+
         <Paper
           elevation={16}
-          
           style={{
             padding: 8,
             margin: 2,
           }}
         >
-            <TableContainer>
+  <TableContainer>
     <Table sx={{ minWidth: 650 }} aria-label="simple table">
         <TableHead>
           <TableRow>
-            <TableCell>Product ID</TableCell>
-            <TableCell align="right">Product Name</TableCell>
-            <TableCell align="right">Quantity</TableCell>
+            <TableCell>Stock ID</TableCell>
+            <TableCell align="right">Medicine Name</TableCell>
+            <TableCell align="right">Quantity taken</TableCell>
             <TableCell align="right">Cost Per Item</TableCell>
             <TableCell align="right">Total Cost</TableCell>
             <TableCell align="right">Action</TableCell>
@@ -206,29 +374,36 @@ export default function StartSell() {
         <TableBody>
           {CartItems.map((row) => (
             <TableRow
-              key={row.ProductID}
+              key={row.StockID}
               sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
             >
               <TableCell component="th" scope="row">
-                {row.ProductID} 
+                {row.StockID} 
               </TableCell>
-              <TableCell align="right">{row.ProductName}</TableCell>
+              <TableCell align="right">{row.MedicineName}</TableCell>
               <TableCell align="right">{row.Qnty}</TableCell>
               <TableCell align="right">{row.CostPerItem}</TableCell>
               <TableCell align="right">{row.TotalCost}</TableCell>
-              <TableCell align="right"><Button id={row.ProductID} onClick={deleteFromCart}>Delete</Button></TableCell>
+              <TableCell align="right"><Button id={row.CartItemID} onClick={(e) => {
+                setTotCost(totCost-row.TotalCost);
+                deleteFromCart(e);
+              }}>Delete</Button></TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
       </TableContainer>
-     
-            <Button variant="contained" href={`/OrderReport/${OrderID}`}  >
+          
+            <Button variant="contained" onClick={placeOrder} >
               Place Order
             </Button>
-            
+
+            <Typography variant="h7" marginLeft={60} marginTop = {2} marginBottom={2} textAlign="initial">
+            Total Cost: {totCost}
+          </Typography>
           
-      </Paper></div></>
+      </Paper>
+      </div></>
       
   );
 }

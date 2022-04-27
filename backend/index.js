@@ -160,9 +160,9 @@ app.get('/getCategory', (request, response) => {
 })
 
 //read Category by name
-app.get('/getCategory/:name', (request, response) => {
+app.get('/getCategoryByName/:name', (request, response) => {
     const name = request.params.name;
-    let sql = `SELECT * FROM category WHERE CATEGORYNAME='${name}'`;
+    let sql = `SELECT * FROM category WHERE CATEGORYNAME COLLATE utf8mb4_general_ci LIKE '%${name}%;'`;
     connection.query(sql, (err, result) => {
         if(err) throw err;
         response.json(result);
@@ -222,10 +222,10 @@ app.get('/getCompany', (request, response) => {
 })
 
 //get company by name
-app.get("/getCompany/:companyName", (request, response) => {
+app.get("/getCompanyByName/:companyName", (request, response) => {
     const companyName = request.params.companyName;
     console.log(companyName);
-    let sql = `SELECT * FROM company WHERE companyName='${companyName}';`;
+    let sql = `SELECT * FROM company WHERE companyName COLLATE utf8mb4_general_ci like '%${companyName}%';`;
     connection.query(sql, (error, result) => {
       if (error) throw error;
       response.json(result);
@@ -295,7 +295,7 @@ app.get('/getStockById/:id', (request, response) => {
 //get stock by medicine name
 app.get('/getStockByName/:name', (request, response) => {
     const name = request.params.name;
-    let sql = `SELECT * FROM STOCK WHERE MEDICINEID IN (SELECT MEDICINEID FROM MEDICINE WHERE MEDICINENAME like '%${name}%');`;
+    let sql = `SELECT * FROM STOCK INNER JOIN MEDICINE ON STOCK.MEDICINEID=MEDICINE.MEDICINEID WHERE MEDICINE.MEDICINENAME COLLATE utf8mb4_general_ci like '%${name}%' AND EXPIRYDATE>(SELECT CURDATE()) ORDER BY STOCK.EXPIRYDATE ASC;`;
     connection.query(sql, (error, result) => {
         if(error) throw error;
         response.json(result);
@@ -313,7 +313,18 @@ app.post('/addStock', (request, response) => {
 });
 
 //update stock
-app.put('/editStock/:id', (request, response) => {
+app.put('/editStockWithQuantity/:id', (request, response) => {
+    const {id} = request.params;
+    const {quantity} = request.body;
+    let sql = `UPDATE STOCK SET quantity=${quantity} WHERE STOCKID=${id};`;
+    connection.query(sql, (error, result) => {
+        if(error) throw error;
+        response.send("done"); 
+    })
+});
+
+//update stock
+app.put('/editStockWithDate/:id', (request, response) => {
     const {id} = request.params;
     const {costPerItem, quantity, manufactureDate, expiryDate, medicineID} = request.body;
     let sql = `UPDATE STOCK SET costPerItem=${costPerItem}, quantity=${quantity}, manufactureDate='${manufactureDate}', expiryDate='${expiryDate}', medicineID=${medicineID} WHERE STOCKID=${id};`;
@@ -353,6 +364,17 @@ app.get('/getCustomerById/:id', (request, response) => {
     })
 })
 
+//get customer by name
+app.get('/getCustomerByName/:name', (request, response) => {
+    const name = request.params.name;
+    console.log(request.params.name);
+    let sql = `SELECT * FROM CUSTOMER WHERE CUSTOMERNAME COLLATE utf8mb4_general_ci LIKE '%${name}%';`;
+    connection.query(sql, (error, result) => {
+        if(error) response.send(error);
+        else response.send(result);
+    })
+})
+
 //get customer by number
 app.get('/getCustomerByNumber/:num', (request, response) => {
     const num = request.params.num;
@@ -365,13 +387,10 @@ app.get('/getCustomerByNumber/:num', (request, response) => {
 })
 //insertCustomer
 app.post('/insertCustomer', (request, response) => {
-    var data = request.body;
-    //console.log(name, job);
-   
-    connection.query('INSERT INTO customer SET ?',data, (err, res) => {
-        if(err) throw err;
-        else
-        response.send("result");
+    var {customerName, customerPhoneNumber} = request.body;   
+    connection.query(`INSERT INTO customer VALUES('${customerName}', ${customerPhoneNumber}, 0)`, (error, result) => {
+        if(error) response.send(error);
+        else response.send(result);
         //response.json(res);
     })
 })
@@ -383,6 +402,16 @@ app.put('/editCustomer/:id', (request, response) => {
     let sql = `UPDATE customer SET customerPhoneNumber=${customerPhoneNumber}, customerName='${customerName}' WHERE customerID=${id};`;
     connection.query(sql, (error, result) => {
 
+        if(error) throw error;
+        response.send("done"); 
+    })
+});
+
+//updateCustomer visits
+app.put('/editVisits/:id', (request, response) => {
+    const {id}  = request.params;
+    let sql = `UPDATE customer SET NUMBEROFVISITS=NUMBEROFVISITS+1 WHERE customerID=${id};`;
+    connection.query(sql, (error, result) => {
         if(error) throw error;
         response.send("done"); 
     })
@@ -421,13 +450,11 @@ app.get('/getOrderById/:id', (request, response) => {
 })
 //insertOrder
 app.post('/insertOrder', (request, response) => {
-    var data = request.body;
-    //console.log(name, job);
+    var {orderDate, customerID, totalCost} = request.body;
    
-    connection.query('INSERT INTO orders SET ?',data, (err, res) => {
+    connection.query(`INSERT INTO orders(ORDERDATE, CUSTOMERID) VALUES("${orderDate}", ${customerID});`, (err, res) => {
         if(err) throw err;
-        else
-        response.send("result");
+        else response.send(res);
         //response.json(res);
     })
 })
@@ -469,16 +496,25 @@ app.get('/getdetorder', (request, response) => {
     })
 })
 
+//get order det by id
+app.get('/getdetorderById/:id', (request, response) => {
+    const id = request.params.id;
+    let sql = `SELECT * FROM order_contains oc, STOCK s, Medicine m where oc.STOCKID=s.STOCKID and s.medicineid=m.medicineid and oc.ORDERID=${id};`;
+    connection.query(sql, (error, result) => {
+        if(error) throw error;
+        response.json(result);
+    })
+})
+
 
 //insert details of order
 app.post('/insertdetorder', (request, response) => {
-    var data = request.body;
+    var {orderID, stockID, quantity} = request.body;
     //console.log(name, job);
    
-    connection.query('INSERT INTO order_contains SET ?',data, (err, res) => {
+    connection.query(`INSERT INTO order_contains(orderid, stockid, quantity) VALUES(${orderID}, ${stockID}, ${quantity})`, (err, res) => {
         if(err) throw err;
-        else
-        response.send("result");
+        else response.send(res);
         //response.json(res);
     })
 })
