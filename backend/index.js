@@ -448,11 +448,23 @@ app.get('/getOrderById/:id', (request, response) => {
         response.json(result);
     })
 })
+
+//get order-customer by id
+app.get('/getOrderCustById/:id', (request, response) => {
+    const {id} = request.params;
+    let sql = `SELECT * FROM orders inner join customer on orders.customerid=customer.customerid WHERE orderID=${id};`;
+    connection.query(sql, (error, result) => {
+        if(error) throw error;
+        response.json(result);
+    })
+})
+
+
 //insertOrder
 app.post('/insertOrder', (request, response) => {
-    var {orderDate, customerID, totalCost} = request.body;
+    var {orderDate, customerID, totalcost} = request.body;
    
-    connection.query(`INSERT INTO orders(ORDERDATE, CUSTOMERID) VALUES("${orderDate}", ${customerID});`, (err, res) => {
+    connection.query(`INSERT INTO orders(ORDERDATE, CUSTOMERID, TOTALCOST) VALUES("${orderDate}", ${customerID}, ${totalcost});`, (err, res) => {
         if(err) throw err;
         else response.send(res);
         //response.json(res);
@@ -499,7 +511,7 @@ app.get('/getdetorder', (request, response) => {
 //get order det by id
 app.get('/getdetorderById/:id', (request, response) => {
     const id = request.params.id;
-    let sql = `SELECT * FROM order_contains oc, STOCK s, Medicine m where oc.STOCKID=s.STOCKID and s.medicineid=m.medicineid and oc.ORDERID=${id};`;
+    let sql = `SELECT o.orderID, m.medicineName, s.stockID, oc.quantity, s.costPerItem, o.customerID FROM order_contains oc, STOCK s, Medicine m, Orders o where oc.STOCKID=s.STOCKID and s.medicineid=m.medicineid and oc.orderID=o.orderid and oc.ORDERID=${id};`;
     connection.query(sql, (error, result) => {
         if(error) throw error;
         response.json(result);

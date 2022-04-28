@@ -91,18 +91,18 @@ export default function StartSell() {
   const placeOrder = (e) => {
     e.preventDefault();
     let date = new Date().toISOString().slice(0, 10);
-    console.log(date);
+    console.log(date, totCost);
     Axios.post(`http://localhost:5000/insertOrder`, {
       orderDate:date,
       customerID:custID,
-      totalCost:totCost
+      totalcost:totCost
     }).then((response) => {
       console.log(response.data.insertId);
       setOrderID(response.data.insertId);
       console.log(orderID);
       editStock();
     })
-    firstUpdate.current = false;
+    
   }
 
   const editStock = () => {
@@ -115,6 +115,7 @@ export default function StartSell() {
       setstckid(item.StockID);
       setq(item.Qnty);
       console.log(item, q);
+      firstUpdate.current = false;
     })
     //getupdatevisits();
   }
@@ -130,7 +131,7 @@ export default function StartSell() {
         stockID:stckid,
         quantity:q
       })
-  }, [q])
+  }, [stckid])
 
   // const getupdatevisits = () => {
     

@@ -18,6 +18,7 @@ function ShowOrder(props: UpdateProps) {
   const [totalCost, setTotalCost] = useState("");
   const [orderDate, setOrderDate] = useState("");
   const [items, setItems] = useState([]);
+  const [det, setdet] = useState(null);
    
   useEffect(() => {
     Axios.get(`http://localhost:5000/getdetorderById/${orderID}`).then((resp) => {
@@ -36,38 +37,30 @@ function ShowOrder(props: UpdateProps) {
   }, []);
 
   function getCustomerID(id){
-    Axios.get(`http://localhost:5000/getOrderById/${id}`).then(
+    Axios.get(`http://localhost:5000/getOrderCustById/${id}`).then(
       (resp) => {
         console.log(resp.data);
         const body = resp.data[0];
         console.log(body);
-        setCustomerID(body.CustomerID);
-        console.log(customerID);
-        getname(body.CustomerID);
+        setdet(body);
+        console.log(det);
+        //getname(body.CustomerID);
       });
-      firstUpdate.current = false;
+      //firstUpdate.current = false;
   }
 
-  const firstUpdate = useRef(true);
+  // const firstUpdate = useRef(true);
 
-  useEffect(() => {
-    if (firstUpdate.current) {
-      return;
-    }
-    Axios.get(`http://localhost:5000/getCustomerById/${customerID}`)
-    .then((response) => {
-      console.log(response.data);
-      setCustomerName(response.data.customerName);
-    })
-  }, [customerID])
-
-  function getname(id){
-    
-  }
-
-  function getList(id1, id2){
-
-  }
+  // useEffect(() => {
+  //   if (firstUpdate.current) {
+  //     return;
+  //   }
+  //   Axios.get(`http://localhost:5000/getCustomerById/${customerID}`)
+  //   .then((response) => {
+  //     console.log(response.data);
+  //     //setCustomerName(response.data.customerName);
+  //   })
+  // }, [customerID])
 
 
   return (
@@ -77,9 +70,9 @@ function ShowOrder(props: UpdateProps) {
       </Box>
       <Box pt={3}>
         <Typography>Order ID : {orderID}</Typography>
-        <Typography>Customer Name : {customerName}</Typography>
-        <Typography>Total Cost : {totalCost}</Typography>
-        <Typography>Order Date: {orderDate}</Typography>
+        {det && <><Typography>Customer Name : {det.customerName}</Typography>
+        <Typography>Total Cost : {det.totalCost}</Typography>
+        <Typography>Order Date: {det.orderDate.slice(0,10)}</Typography></>}
       </Box>
 
       <TableContainer>
@@ -89,6 +82,7 @@ function ShowOrder(props: UpdateProps) {
               <TableCell>Stock ID</TableCell>
               <TableCell align="center">Medicine Name</TableCell>
               <TableCell align="center">Quantity</TableCell>
+              <TableCell align="center">Cost Per Item</TableCell>
               <TableCell align="center">Total Amount</TableCell>
               </TableRow>
             {items.map((report) => (
@@ -99,6 +93,7 @@ function ShowOrder(props: UpdateProps) {
                 <TableCell align="center">{report.stockID}</TableCell>
                 <TableCell align="center">{report.medicineName}</TableCell>
                 <TableCell align="center">{report.quantity}</TableCell>
+                <TableCell align="center">{report.costPerItem}</TableCell>
                 <TableCell align="center">{report.quantity*report.costPerItem}</TableCell>
               </TableRow>
             ))}
