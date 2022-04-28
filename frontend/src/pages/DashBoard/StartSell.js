@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Box from "@mui/material/Box";
 import Drawer from "@mui/material/Drawer";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -40,7 +40,10 @@ export default function StartSell() {
   const [CartItems,setCart]=useState([]);
   const [orderID, setOrderID] = useState(0);
   const [disc, setDisc] = useState(1);
-     const CostPerItem=4
+
+  const [stckid, setstckid] = useState(0);
+  const [q, setq] = useState(0);
+
   useEffect(()=>console.log("hello"),[isValid])
   const continueButton=()=>{
     if (custName=="" || custNumber=="") alert("Customer Name and Phone Number cannot be empty");
@@ -99,6 +102,7 @@ export default function StartSell() {
       console.log(orderID);
       editStock();
     })
+    firstUpdate.current = false;
   }
 
   const editStock = () => {
@@ -108,20 +112,39 @@ export default function StartSell() {
       }).then((response) => {
         console.log(response.data);
       })
-      Axios.post(`http://localhost:5000/insertdetorder`, {
-        orderID:orderID,
-        stockID:item.StockID,
-        quantity:item.Qnty
-      })
+      setstckid(item.StockID);
+      setq(item.Qnty);
+      console.log(item, q);
     })
-    getupdatevisits();
+    //getupdatevisits();
   }
 
-  const getupdatevisits = () => {
+  const firstUpdate = useRef(true);
+
+  useEffect(() => {
+    if (firstUpdate.current) {
+      return;
+    }
+    Axios.post(`http://localhost:5000/insertdetorder`, {
+        orderID:orderID,
+        stockID:stckid,
+        quantity:q
+      })
+  }, [q])
+
+  // const getupdatevisits = () => {
+    
+  // }
+
+  useEffect(() => {
+    if (firstUpdate.current) {
+      //firstUpdate.current = false;
+      return;
+    }
     Axios.put(`http://localhost:5000/editVisits/${custID}`).then((response) => {
       console.log(response.data);
     })
-  }
+  }, [orderID])
 
   const deleteFromCart=(e)=>{
     e.preventDefault();

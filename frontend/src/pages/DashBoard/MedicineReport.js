@@ -21,19 +21,38 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Axios from "axios";
 import { Link } from "react-router-dom";
+import { Autocomplete } from "@mui/material";
+import { TextField } from "@mui/material";
 
 const drawerWidth = 200;
 
 function MedicineReport(props: MyComponent) {
   const classes = useStyles();
-
+  const [report, setReport] = useState("");
   const [reports, setReports] = useState([]);
+  function handleMedicineChange(event, value) {
+    console.log(value);
+    if(!value){
+      getReports();
+    }
+    else{
+      setReport(value);
+      console.log(report);
+    }
+  }
+  useEffect(() => {
+    Axios.get(`http://localhost:5000/getMedicineByName/${report.medicineName}`)
+  .then((response) => {
+    console.log(response.data);
+    setReports(response.data);
+  })
+  }, [report])
 
     useEffect(() => {
-        getReport()
+        getReports()
     }, []);
 
-    const getReport = () => {
+    const getReports = () => {
         Axios.get("http://localhost:5000/getAllMedicine")
         .then((response) => {
           console.log(response.data);
@@ -67,6 +86,18 @@ function MedicineReport(props: MyComponent) {
       >
         Medicine Report
       </Typography>
+
+      <Autocomplete
+        fullWidth
+        value={report}
+        id="combo-box-demo"
+        options={reports}
+        getOptionLabel={(report) => report.medicineName || "" }
+        sx={{ width: 300 }}
+        renderInput={(params) => <TextField {...params} label="Select Medicine" />}
+        onChange={handleMedicineChange}
+      />
+
       <TableContainer>
         <Table sx={{ minWidth: 650 }} aria-label="simple table">
           <TableHead>

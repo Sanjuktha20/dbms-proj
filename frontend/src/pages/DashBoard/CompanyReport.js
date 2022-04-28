@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { withRouter, RouteComponentProps } from "react-router";
 import Box from "@mui/material/Box";
 import { Button } from "@mui/material";
@@ -39,13 +39,23 @@ function CompanyReport(props: MyComponent) {
     else{
       setCompany(value);
       console.log(company);
-      Axios.get(`http://localhost:5000/getCompanyByName/${company.companyName}`)
-      .then((response) => {
-        console.log(response.data);
-        setCompanies(response.data);
-      })
     }
   }
+
+  const firstUpdate = useRef(true);
+
+
+  useEffect(() => {
+    if (firstUpdate.current) {
+      firstUpdate.current = false;
+      return;
+    }
+    Axios.get(`http://localhost:5000/getCompanyByName/${company.companyName}`)
+  .then((response) => {
+    console.log(response.data);
+    setCompanies(response.data);
+  })
+  }, [company])
 
     useEffect(() => {
         getCompanies()

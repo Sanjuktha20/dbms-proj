@@ -1,5 +1,5 @@
 import { Typography } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Axios from "axios";
 import { withRouter, RouteComponentProps, useHistory } from "react-router-dom";
 import { Box } from "@mui/system";
@@ -45,15 +45,24 @@ function ShowOrder(props: UpdateProps) {
         console.log(customerID);
         getname(body.CustomerID);
       });
-      
+      firstUpdate.current = false;
   }
 
-  function getname(id){
-    Axios.get(`http://localhost:5000/getCustomerById/${id}`)
+  const firstUpdate = useRef(true);
+
+  useEffect(() => {
+    if (firstUpdate.current) {
+      return;
+    }
+    Axios.get(`http://localhost:5000/getCustomerById/${customerID}`)
     .then((response) => {
       console.log(response.data);
       setCustomerName(response.data.customerName);
     })
+  }, [customerID])
+
+  function getname(id){
+    
   }
 
   function getList(id1, id2){
@@ -63,6 +72,16 @@ function ShowOrder(props: UpdateProps) {
 
   return (
     <div>
+      <Box pt={3}>
+        <Typography variant="h4">Order Details: </Typography>
+      </Box>
+      <Box pt={3}>
+        <Typography>Order ID : {orderID}</Typography>
+        <Typography>Customer Name : {customerName}</Typography>
+        <Typography>Total Cost : {totalCost}</Typography>
+        <Typography>Order Date: {orderDate}</Typography>
+      </Box>
+
       <TableContainer>
         <Table sx={{ minWidth: 650 }} aria-label="simple table">
           <TableHead>
